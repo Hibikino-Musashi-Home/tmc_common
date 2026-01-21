@@ -39,17 +39,17 @@ DAMAGE.
 
 namespace tmc_utils {
 
-/// Obtained a ROS logging lectory
+/// Get the ROS log directory
 std::string GetLogDirectory();
 
-/// Get the character string of time
-/// @param [in] stamp time stamp
+/// Get the time string
+/// @param [in] stamp Timestamp
 std::string GetTimeString(const rclcpp::Time& stamp);
 
-/// Record any ROS MSG, SRV
-/// @param [in] filename  file name
-/// @param [in] msg  msg or srv.request or srv.response
-/// @return true: Success, false: Failure
+/// Record arbitrary ROS msg, srv
+/// @param [in] filename Filename
+/// @param [in] msg or srv.request or srv.response
+/// @return true: success, false: failure
 template <typename T>
 bool SaveMsg(const std::string& filename, const T& msg) {
   std::ofstream ofs;
@@ -68,10 +68,10 @@ bool SaveMsg(const std::string& filename, const T& msg) {
   return true;
 }
 
-/// Get any ROS MSG, SRV
-/// @param [in] filename  file name
-/// @param [out] msg  msg or srv.request or srv.response
-/// @return true: Success, false: Failure
+/// Retrieve arbitrary ROS msg, srv
+/// @param [in] filename Filename
+/// @param [out] msg or srv.request or srv.response
+/// @return true: success, false: failure
 template <typename T>
 bool LoadMsg(const std::string& filename, T& msg) {
   std::ifstream ifs;
@@ -103,22 +103,22 @@ bool LoadMsg(const std::string& filename, T& msg) {
   }
 }
 
-/// Classes and time stamps to make SAVEMSG easier to use and save
+/// Class to make SaveMsg easier to use, save with timestamp
 class MessageLogger {
  public:
   using Ptr = std::shared_ptr<MessageLogger>;
 
-  /// Keep the constructor and output destination
-  /// @param [in] prefix  prefix of the output file, including the directory information at the output destination
+  /// Constructor, retains output destination
+  /// @param [in] prefix Prefix of the output file, including output directory information
   explicit MessageLogger(const std::string& prefix) : prefix_(prefix) {}
 
-  /// Update the time stamp to attach to the output file
-  /// @param [in] stamp  time stamp
+  /// Update the timestamp to be attached to the output file
+  /// @param [in] stamp Timestamp
   void UpdateStamp(const rclcpp::Time& stamp) { time_str_ = GetTimeString(stamp); }
 
-  /// Save any ROS MSG, SRV
-  /// @param [in] postfix  output file Postfix
-  /// @param [in] msg  saving MSG, SRV
+  /// Save arbitrary ROS msg, srv
+  /// @param [in] postfix Postfix of the output file
+  /// @param [in] msg Msg, srv to be saved
   template<typename TYPE>
   bool SaveMessage(const std::string& postfix, const TYPE& msg) const {
     return SaveMsg(prefix_ + time_str_ + postfix, msg);

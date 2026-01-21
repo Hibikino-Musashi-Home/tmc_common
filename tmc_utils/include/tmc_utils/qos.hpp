@@ -32,7 +32,7 @@ DAMAGE.
 
 namespace tmc_utils {
 
-// Actually, it's hard to imagine TransientLocal at Bestefort, so it's hard to imagine.
+// Actually, it's hard to imagine TransientLocal with BestEffort, so Volatile with ClockQoS
 class BestEffortQoS : public rclcpp::QoS {
  public:
   BestEffortQoS() : BestEffortQoS(1) {}
@@ -43,7 +43,7 @@ class BestEffortQoS : public rclcpp::QoS {
   }
 };
 
-// Used for either Pub/Sub
+// Used for both Pub/Sub
 class ReliableVolatileQoS : public rclcpp::QoS {
  public:
   ReliableVolatileQoS() : ReliableVolatileQoS(1) {}
@@ -54,7 +54,7 @@ class ReliableVolatileQoS : public rclcpp::QoS {
   }
 };
 
-// Equivalent to ROS1 Latched Publisher
+// Equivalent to latched Publisher in ROS1
 class ReliableTransientLocalQoS : public rclcpp::QoS {
  public:
   ReliableTransientLocalQoS() : ReliableTransientLocalQoS(1) {}

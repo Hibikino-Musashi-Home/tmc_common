@@ -35,11 +35,11 @@ DAMAGE.
 
 namespace tmc_utils {
 
-// Obtained a ROS logging lectory
+// Get the ROS log directory
 std::string GetLogDirectory() {
   const auto allocator = rcutils_get_default_allocator();
   char* directory = nullptr;
-  // When successful, RCL_LOGGING_RET_OK is returned, but it cannot be used because it is defined in CPP in Define.
+  // It returns RCL_LOGGING_RET_OK on success, but this is defined in cpp with define, so it cannot be used
   // Since it was defined as 0, compare it with 0
   if (rcl_logging_get_logging_directory(allocator, &directory) == 0) {
     return std::string(directory);
@@ -48,7 +48,7 @@ std::string GetLogDirectory() {
   }
 }
 
-// Get the character string of time
+// Get the time string
 std::string GetTimeString(const rclcpp::Time& stamp) {
   const auto stamp_msg = builtin_interfaces::msg::Time(stamp);
   std::ostringstream ss;

@@ -33,22 +33,41 @@ DAMAGE.
 #include <vector>
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
 
 namespace tmc_utils {
 
-template <typename ParameterType>
-auto GetParameter(rclcpp::Node* node, const std::string& name, const ParameterType& default_value) {
+template <typename NodeType, typename ParameterType>
+auto GetParameter(NodeType* node, const std::string& name, const ParameterType& default_value) {
   if (node->has_parameter(name)) {
-    return node->get_parameter(name).get_value<ParameterType>();
+    return node->get_parameter(name).template get_value<ParameterType>();
   } else {
-    return node->declare_parameter<ParameterType>(name, default_value);
+    return node->template declare_parameter<ParameterType>(name, default_value);
   }
 }
 
 template <typename ParameterType>
-auto GetParameter(rclcpp::Node::SharedPtr node, const std::string& name, const ParameterType& default_value) {
-  return GetParameter<ParameterType>(node.get(), name, default_value);
+auto GetParameter(rclcpp::Node* node, const std::string& name, const ParameterType& default_value) {
+  return GetParameter<rclcpp::Node, ParameterType>(node, name, default_value);
 }
+
+template <typename ParameterType>
+auto GetParameter(rclcpp::Node::SharedPtr node, const std::string& name, const ParameterType& default_value) {
+  return GetParameter<rclcpp::Node, ParameterType>(node.get(), name, default_value);
+}
+
+template <typename ParameterType>
+auto GetParameter(rclcpp_lifecycle::LifecycleNode* node, const std::string& name, const ParameterType& default_value) {
+  return GetParameter<rclcpp_lifecycle::LifecycleNode, ParameterType>(node, name, default_value);
+}
+
+template <typename ParameterType>
+auto GetParameter(rclcpp_lifecycle::LifecycleNode::SharedPtr node,
+                  const std::string& name,
+                  const ParameterType& default_value) {
+  return GetParameter<rclcpp_lifecycle::LifecycleNode, ParameterType>(node.get(), name, default_value);
+}
+
 
 template<typename ParameterType>
 class DynamicParameter {
@@ -67,17 +86,29 @@ class DynamicParameter {
                    const std::string& parameter_name,
                    const ParameterType& default_value) : DynamicParameter(node.get(), parameter_name, default_value) {}
 
-  ParameterType value() const { return value_; }
+  DynamicParameter(rclcpp_lifecycle::LifecycleNode* node,
+                   const std::string& parameter_name,
+                   const ParameterType& default_value) : name_(parameter_name) {
+    value_ = GetParameter<ParameterType>(node, parameter_name, default_value);
+    handle_ = node->add_on_set_parameters_callback(
+        std::bind(&DynamicParameter<ParameterType>::SetParameterCallback, this, std::placeholders::_1));
+  }
+
+  DynamicParameter(const rclcpp_lifecycle::LifecycleNode::SharedPtr& node,
+                   const std::string& parameter_name,
+                   const ParameterType& default_value) : DynamicParameter(node.get(), parameter_name, default_value) {}
+
+  ParameterType value() const { std::lock_guard<std::mutex> lock(mutex_); return value_; }
 
   rcl_interfaces::msg::SetParametersResult SetParameterCallback(const std::vector<rclcpp::Parameter>& params) {
     for (const auto& param : params) {
       if (param.get_name() == name_) {
+        std::lock_guard<std::mutex> lock(mutex_);
         value_ = param.get_value<ParameterType>();
         break;
       }
     }
-    // The callback of the parameter update is called by CHAIN,
-    // but if you return False, it will be discontinued, so be sure to return true.
+    // The parameter update callback is called in the chain, but if it returns false, it will be terminated, so it must always return true
     auto result = rcl_interfaces::msg::SetParametersResult();
     result.successful = true;
     return result;
@@ -86,7 +117,8 @@ class DynamicParameter {
  private:
   ParameterType value_;
   std::string name_;
-  rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr handle_;
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr handle_;
+  mutable std::mutex mutex_;
 };
 
 }  // namespace tmc_utils

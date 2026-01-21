@@ -25,7 +25,8 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
-/// @brief    General -purpose function for handling joint orbits
+/// @file     joint_trajectory_configuration.hpp
+/// @brief    General function for handling joint trajectories
 #ifndef TMC_MANIPULATION_UTIL_JOINT_TRAJECTORY_CONFIGURATION_HPP_
 #define TMC_MANIPULATION_UTIL_JOINT_TRAJECTORY_CONFIGURATION_HPP_
 #include <string>
@@ -35,27 +36,28 @@ DAMAGE.
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 
 namespace tmc_manipulation_util {
-/// Extracts a joint_trajectory containing only the joints specified by joint_names.
-/// If a joint does not exist in the joint_trajectory, it will be obtained from the joint_state.
-/// If it is not found there either, the process will fail.
-/// @param[in] joint_trajectory input orbit
-/// @param[in] joint_names joint name
-/// @param[in] joint_state joint state
-/// @param[out] partial_joint_trajectory_out Delivery
-/// @return Consciousness
+/// From joint_trajectory, using joint_names
+/// Extract only the specified joints to create joint_trajectory
+/// If a joint does not exist in joint_trajectory, obtain it from joint_state.
+/// If it is not there either, it is considered a failure
+/// @param[in] joint_trajectory Input trajectory
+/// @param[in] joint_names Joint names
+/// @param[in] joint_state Joint state
+/// @param[out] partial_joint_trajectory_out Output trajectory
+/// @return Success or failure
 bool ExtractTrajectory(const trajectory_msgs::msg::JointTrajectory& joint_trajectory,
                        const std::vector<std::string>& joint_names,
                        const sensor_msgs::msg::JointState& joint_state,
                        trajectory_msgs::msg::JointTrajectory& partial_joint_trajectory_out);
 
-/// Merges the original_trajectory and additional_trajectory, which have the same number of points
-/// but for different joints, into a single trajectory.
-/// The process will fail if the points' sizes differ.
-/// time_from_start will be aligned with the original trajectory.
-/// @param[in] original_trajectory Original enters the rail
-/// @param[in] additional_trajectory Additional input orbit
-/// @param[out] merged_trajectory_out
-/// @return Consciousness
+/// Merge original_trajectory and additional_trajectory of different joints
+/// with the same number of points into a single trajectory
+/// If the size of points differs, it is considered a failure
+/// time_from_start is aligned with the original
+/// @param[in] original_trajectory Original input trajectory
+/// @param[in] additional_trajectory Additional input trajectory
+/// @param[out] merged_trajectory_out Output trajectory
+/// @return Success or failure
 bool MergeJointTrajectory(const trajectory_msgs::msg::JointTrajectory& original_trajectory,
                           const trajectory_msgs::msg::JointTrajectory& additional_trajectory,
                           trajectory_msgs::msg::JointTrajectory& merged_trajectory_out);

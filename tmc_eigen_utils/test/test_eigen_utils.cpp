@@ -25,7 +25,12 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
-/// @brief    Eigen_utils test
+/// @file     test_eigen_utils
+/// @brief    Test of eigen_utils
+/// @author   Koji Terada
+/// @version  1.0.0
+/// @date     2012.2.24
+/// @note     [1.0.0] 2012.2.24 Newly created
 #include <stdlib.h>
 #include <gtest/gtest.h>
 #include <tmc_eigen_utils/eigen_utils.hpp>
@@ -34,9 +39,9 @@ using tmc_eigen_utils::RPYToQuaternion;
 using tmc_eigen_utils::QuaternionToRPY;
 
 namespace {
-// A threshold that is regarded as the value of DOUBLE is near
+// Threshold to consider double values as close
 double kDoubleEps = 1.0e-10;
-// A threshold that is considered that the value of Float is near
+// Threshold to consider float values as close
 float kFloatEps = 1.0e-4;
 // Number of random values
 int32_t kRandomItMax = 1000000;
@@ -131,7 +136,7 @@ TEST(QuaternionToRPYTest, Convert) {
   EXPECT_NEAR(rpy(2), 0.0, kDoubleEps);
 }
 
-// Will Quaternion convert to RPY and return?
+// Check if quaternion converts to rpy and returns
 TEST(RandomTest, test) {
   Eigen::Vector3d rpy;
   Eigen::Quaterniond q;

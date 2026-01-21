@@ -133,7 +133,7 @@ TEST_F(JointTrajectoryPublisherTest, PublishExtracted) {
   WaitForSubscribe(publisher);
 
   auto trajectory = trajectory_cache_->GetValue();
-  // After that, skip the header and time_from_start.
+  // Skip checking header and time_from_start from here
   EXPECT_EQ(trajectory.joint_names, joint_names);
   ASSERT_EQ(trajectory.points.size(), 1u);
   EXPECT_EQ(trajectory.points[0].positions, std::vector<double>({0.2}));
@@ -179,7 +179,7 @@ TEST_F(JointTrajectoryPublisherTest, UseControllerNodeJoints) {
   subscriber_node_->declare_parameter("joints", joint_names);
 
   auto spin_func = [this]() {
-    // There is no particular basis for the number of loops
+    // No particular reason for the number of loops
     for (auto i = 0; i < 20; ++i) {
       rclcpp::spin_some(subscriber_node_);
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -200,7 +200,7 @@ TEST_F(JointTrajectoryPublisherTest, UseParameterJoints) {
   subscriber_node_->declare_parameter("joints", subscriber_joint_names);
 
   auto spin_func = [this]() {
-    // There is no particular basis for the number of loops
+    // No particular reason for the number of loops
     for (auto i = 0; i < 20; ++i) {
       rclcpp::spin_some(subscriber_node_);
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -221,8 +221,8 @@ TEST_F(JointTrajectoryPublisherTest, ContinuousJoints) {
 
   EXPECT_EQ(publisher->continuous_joints(), publisher_joint_names);
 
-  // It is troublesome to make a parameterized test only here, so turn it with a for loop.
-  // Orbit position, current location, expected value
+  // It's troublesome to parameterize only this part for testing, so use a for loop
+  // Order: position of orbit, current position, expected value
   std::vector<std::array<double, 3>> test_inputs = {{0.0, 0.0, 0.0},
                                                     {3.0, 0.0, 3.0},
                                                     {4.0, 0.0, 4.0 - 2.0 * M_PI},

@@ -43,12 +43,12 @@ sensor_msgs::msg::JointState MakeJointState() {
   return joint_state;
 }
 
-// Make orbit for verification
-// 3点
-// The position is 0.1,1.1, 2.1
-// The speed is 0.2, 1.2, 2.2
-// The acceleration is 0.3, 11.3, 2.3
-// Effort is 0.4, 1.4, 2.4
+// Create a trajectory for validation
+// 3 points
+// Position is 0.1, 1.1, 2.1 for all axes
+// Velocity is 0.2, 1.2, 2.2 for all axes
+// Acceleration is 0.3, 1.3, 2.3 for all axes
+// Effort is 0.4, 1.4, 2.4 for all axes
 // Time is 0.0, 1.0, 2.0
 trajectory_msgs::msg::JointTrajectory MakeTrajectory() {
   trajectory_msgs::msg::JointTrajectory joint_trajectory;
@@ -68,13 +68,13 @@ trajectory_msgs::msg::JointTrajectory MakeTrajectory() {
   return joint_trajectory;
 }
 
-// Head/ODOM to make track for verification
-// Specified point number
-// The position is 0.1,1.1, 2.1 ...
-// The speed is 0.2, 1.2, 2.2 ...
-// The acceleration is 0.3, 1.3, 2.3 ...
-// EFFORT is 0.4, 1.4, 2.4 ...
-// Time is 0.0, 1.0, 2.0 ...
+// Create a trajectory for validation head/odom
+// Specified number of points
+// Position is 0.1, 1.1, 2.1 for all axes...
+// Velocity is 0.2, 1.2, 2.2 for all axes...
+// Acceleration is 0.3, 1.3, 2.3 for all axes...
+// Effort is 0.4, 1.4, 2.4 for all axes...
+// Time is 0.0, 1.0, 2.0...
 trajectory_msgs::msg::JointTrajectory MakeHeadTrajectory(const uint32_t num_of_points) {
   trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names = {"head", "odom"};
@@ -91,13 +91,13 @@ trajectory_msgs::msg::JointTrajectory MakeHeadTrajectory(const uint32_t num_of_p
   return joint_trajectory;
 }
 
-// Make track for verification ARM/WRIST/HAND
-// Specified point number
-// The position is 0.1,1.1, 2.1 ...
-// The speed is 0.2, 1.2, 2.2 ...
-// The acceleration is 0.3, 1.3, 2.3 ...
-// EFFORT is 0.4, 1.4, 2.4 ...
-// Time is 0.5, 1.5, 2.5 ...
+// Create a trajectory for validation arm/wrist/hand
+// Specified number of points
+// Position is 0.1, 1.1, 2.1 for all axes...
+// Velocity is 0.2, 1.2, 2.2 for all axes...
+// Acceleration is 0.3, 1.3, 2.3 for all axes...
+// Effort is 0.4, 1.4, 2.4 for all axes...
+// Time is 0.5, 1.5, 2.5...
 trajectory_msgs::msg::JointTrajectory MakeArmTrajectory(const uint32_t num_of_points) {
   trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names = {"arm", "wrist", "hand"};
@@ -117,13 +117,13 @@ trajectory_msgs::msg::JointTrajectory MakeArmTrajectory(const uint32_t num_of_po
 }  // namespace
 
 namespace tmc_manipulation_util {
-// If only the joints exist in the orbit information are specified, the results of the specified joint will be returned.
+// When only joints existing in trajectory information are specified, results for all specified joints are returned
 TEST(ExtractTrajectory, existAllJoints) {
   const auto joint_trajectory = MakeTrajectory();
   const auto joint_state = MakeJointState();
   const std::vector<std::string> joint_names = {"head", "wrist", "gripper"};
 
-  // Confirm that the processing returns normally
+  // Confirm that processing returns normally
   trajectory_msgs::msg::JointTrajectory joint_trajectory_dst;
   EXPECT_TRUE(ExtractTrajectory(joint_trajectory,
                                 joint_names,
@@ -133,19 +133,19 @@ TEST(ExtractTrajectory, existAllJoints) {
   EXPECT_EQ(1, joint_trajectory_dst.header.stamp.sec);
   EXPECT_EQ(0u, joint_trajectory_dst.header.stamp.nanosec);
   EXPECT_EQ("ref_frame", joint_trajectory_dst.header.frame_id);
-  // Confirm that the extracted joint is correct
+  // Confirm that the extracted joints are correct
   EXPECT_EQ(joint_names, joint_trajectory_dst.joint_names);
   // Confirm that the number of points is correct
   ASSERT_EQ(3u, joint_trajectory_dst.points.size());
 
   for (auto point_index = 0; point_index < 3; ++point_index) {
-    // Confirm that the location information is correct
+    // Confirm that position information is correct
     ASSERT_EQ(joint_names.size(), joint_trajectory_dst.points[point_index].positions.size());
     for (unsigned int joint_index = 0; joint_index < joint_names.size(); ++joint_index) {
       EXPECT_EQ(static_cast<double>(point_index) + 0.1,
                 joint_trajectory_dst.points[point_index].positions[joint_index]);
     }
-    // Confirm that speed information is correct
+    // Confirm that velocity information is correct
     ASSERT_EQ(joint_names.size(), joint_trajectory_dst.points[point_index].velocities.size());
     for (unsigned int joint_index = 0; joint_index < joint_names.size(); ++joint_index) {
       EXPECT_EQ(static_cast<double>(point_index) + 0.2,
@@ -157,41 +157,41 @@ TEST(ExtractTrajectory, existAllJoints) {
       EXPECT_EQ(static_cast<double>(point_index) + 0.3,
                 joint_trajectory_dst.points[point_index].accelerations[joint_index]);
     }
-    // Confirm that EFFORT information is correct
+    // Confirm that effort information is correct
     ASSERT_EQ(joint_names.size(), joint_trajectory_dst.points[point_index].effort.size());
     for (unsigned int joint_index = 0; joint_index < joint_names.size(); ++joint_index) {
       EXPECT_EQ(static_cast<double>(point_index) + 0.4,
                 joint_trajectory_dst.points[point_index].effort[joint_index]);
     }
-    // Confirm that the value of time is correct
+    // Confirm that time values are correct
     EXPECT_EQ(joint_trajectory.points[point_index].time_from_start,
               joint_trajectory_dst.points[point_index].time_from_start);
   }
 }
 
-// Even if a joint does not exist in the orbit information, only the result of the joints in the Jointstate list is returned.
+// Even when joints not existing in trajectory information are included, only results for joints existing in the JointState list are returned
 TEST(ExtractTrajectory, includeNotExistJoint) {
   const auto joint_trajectory = MakeTrajectory();
   const auto joint_state = MakeJointState();
   const std::vector<std::string> joint_names = {"head", "odom"};
 
-  // Confirm that the processing returns normally
+  // Confirm that processing returns normally
   trajectory_msgs::msg::JointTrajectory joint_trajectory_dst;
   EXPECT_TRUE(ExtractTrajectory(joint_trajectory,
                                 joint_names,
                                 joint_state,
                                 joint_trajectory_dst));
-  // Confirm that the extracted joint is correct
+  // Confirm that the extracted joints are correct
   EXPECT_EQ(joint_names, joint_trajectory_dst.joint_names);
   // Confirm that the number of points is correct
   ASSERT_EQ(3u, joint_trajectory_dst.points.size());
 
   for (auto point_index = 0; point_index < 3; ++point_index) {
-    // Confirm that the location information is correct
+    // Confirm that position information is correct
     ASSERT_EQ(2u, joint_trajectory_dst.points[point_index].positions.size());
     EXPECT_EQ(static_cast<double>(point_index) + 0.1, joint_trajectory_dst.points[point_index].positions[0]);
     EXPECT_EQ(99.0, joint_trajectory_dst.points[point_index].positions[1]);
-    // Confirm that speed information is correct
+    // Confirm that velocity information is correct
     ASSERT_EQ(2u, joint_trajectory_dst.points[point_index].velocities.size());
     EXPECT_EQ(static_cast<double>(point_index) + 0.2, joint_trajectory_dst.points[point_index].velocities[0]);
     EXPECT_EQ(0.0, joint_trajectory_dst.points[point_index].velocities[1]);
@@ -199,17 +199,17 @@ TEST(ExtractTrajectory, includeNotExistJoint) {
     ASSERT_EQ(2u, joint_trajectory_dst.points[point_index].accelerations.size());
     EXPECT_EQ(static_cast<double>(point_index) + 0.3, joint_trajectory_dst.points[point_index].accelerations[0]);
     EXPECT_EQ(0.0, joint_trajectory_dst.points[point_index].accelerations[1]);
-    // Confirm that EFFORT information is correct
+    // Confirm that effort information is correct
     ASSERT_EQ(2u, joint_trajectory_dst.points[point_index].effort.size());
     EXPECT_EQ(static_cast<double>(point_index) + 0.4, joint_trajectory_dst.points[point_index].effort[0]);
     EXPECT_EQ(0.0, joint_trajectory_dst.points[point_index].effort[1]);
-    // Confirm that the value of time is correct
+    // Confirm that time values are correct
     EXPECT_EQ(joint_trajectory.points[point_index].time_from_start,
               joint_trajectory_dst.points[point_index].time_from_start);
   }
 }
 
-// If VEL, ACC, EFF is not included in the input orbit, it is not included in the output
+// If vel, acc, eff are not included in the input trajectory, they are not included in the output
 TEST(ExtractTrajectory, onlyPosition) {
   auto input_trajectory = MakeTrajectory();
   for (auto& point : input_trajectory.points) {
@@ -225,7 +225,7 @@ TEST(ExtractTrajectory, onlyPosition) {
                                 joint_state, dst_trajectory));
 
   ASSERT_EQ(input_trajectory.points.size(), dst_trajectory.points.size());
-  // The details are checked in another test, so only the size is confirmed.
+  // Since detailed numbers are checked in a separate test, only confirm the size
   for (const auto& point : dst_trajectory.points) {
     EXPECT_EQ(joint_names.size(), point.positions.size());
     EXPECT_TRUE(point.velocities.empty());
@@ -234,13 +234,13 @@ TEST(ExtractTrajectory, onlyPosition) {
   }
 }
 
-// If a joint that does not exist is specified, False returns
+// If non-existing joints are specified, false is returned
 TEST(ExtractTrajectory, notExistInJointState) {
   const auto joint_trajectory = MakeTrajectory();
   const auto joint_state = MakeJointState();
   const std::vector<std::string> joint_names = {"head", "shoulder"};
 
-  // Confirm that the processing is abnormal
+  // Confirm that processing returns abnormally
   trajectory_msgs::msg::JointTrajectory joint_trajectory_dst;
   EXPECT_FALSE(ExtractTrajectory(joint_trajectory,
                                  joint_names,
@@ -248,13 +248,13 @@ TEST(ExtractTrajectory, notExistInJointState) {
                                  joint_trajectory_dst));
 }
 
-// Malge processing of orbit is successfully processed
+// Confirm that trajectory merge processing is handled correctly
 TEST(MergeJointTrajectory, normalCase) {
   const auto base_joint_trajectory_1 = MakeHeadTrajectory(3);
   const auto base_joint_trajectory_2 = MakeArmTrajectory(3);
   std::vector<std::string> joint_names = {"arm", "wrist", "hand", "head", "odom"};
 
-  // Confirm that the processing returns normally
+  // Confirm that processing returns normally
   trajectory_msgs::msg::JointTrajectory merged_joint_trajectory;
   EXPECT_TRUE(MergeJointTrajectory(base_joint_trajectory_1,
                                    base_joint_trajectory_2,
@@ -265,13 +265,13 @@ TEST(MergeJointTrajectory, normalCase) {
   EXPECT_EQ(3u, merged_joint_trajectory.points.size());
 
   for (uint32_t point_index = 0; point_index < 3; ++point_index) {
-    // Confirm that the location information is correct
+    // Confirm that position information is correct
     ASSERT_EQ(joint_names.size(), merged_joint_trajectory.points[point_index].positions.size());
     for (uint32_t joint_index = 0; joint_index < joint_names.size(); ++joint_index) {
       EXPECT_EQ(static_cast<double>(point_index) + 0.1,
                 merged_joint_trajectory.points[point_index].positions[joint_index]);
     }
-    // Confirm that speed information is correct
+    // Confirm that velocity information is correct
     ASSERT_EQ(joint_names.size(), merged_joint_trajectory.points[point_index].velocities.size());
     for (uint32_t joint_index = 0; joint_index < joint_names.size(); ++joint_index) {
       EXPECT_EQ(static_cast<double>(point_index) + 0.2,
@@ -283,30 +283,30 @@ TEST(MergeJointTrajectory, normalCase) {
       EXPECT_EQ(static_cast<double>(point_index) + 0.3,
                 merged_joint_trajectory.points[point_index].accelerations[joint_index]);
     }
-    // Confirm that EFFORT information is correct
+    // Confirm that effort information is correct
     ASSERT_EQ(joint_names.size(), merged_joint_trajectory.points[point_index].effort.size());
     for (uint32_t joint_index = 0; joint_index < joint_names.size(); ++joint_index) {
       EXPECT_EQ(static_cast<double>(point_index) + 0.4,
                 merged_joint_trajectory.points[point_index].effort[joint_index]);
     }
-    // Confirm that the value of time is correct
+    // Confirm that time values are correct
     EXPECT_EQ(static_cast<int>(point_index), merged_joint_trajectory.points[point_index].time_from_start.sec);
   }
 }
 
-// False returns in the case of orbit with different scores
+// If trajectories with different numbers of points are specified, false is returned
 TEST(MergeJointTrajectory, numOfPointsIsDiff) {
   const auto base_joint_trajectory_1 = MakeHeadTrajectory(3);
   const auto base_joint_trajectory_2 = MakeArmTrajectory(5);
 
-  // Confirm that the processing is abnormal
+  // Confirm that processing returns abnormally
   trajectory_msgs::msg::JointTrajectory merged_joint_trajectory;
   EXPECT_FALSE(MergeJointTrajectory(base_joint_trajectory_1,
                                     base_joint_trajectory_2,
                                     merged_joint_trajectory));
 }
 
-// False returns in the case of orbit including the same joint name
+// If trajectories containing the same joint name are specified, false is returned
 TEST(MergeJointTrajectory, includeSameJoint) {
   const auto joint_trajectory = MakeHeadTrajectory(3);
   trajectory_msgs::msg::JointTrajectory merged_joint_trajectory;

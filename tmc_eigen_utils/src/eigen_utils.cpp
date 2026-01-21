@@ -25,7 +25,14 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
-/// @brief    Summarize useful functions for using Eigen
+/// @file     eigen_utils.cpp
+/// @brief    Utility functions for using eigen
+/// @author   Koji Terada
+/// @version  1.0.0
+/// @date     2012.2.23
+/// @note     [1.0.0] 2012.2.23 Newly created
+///           For now, roll-pitch-yaw angles
+
 #include <tmc_eigen_utils/eigen_utils.hpp>
 
 namespace {
@@ -35,9 +42,9 @@ const double kThresholdSingularRPY = 0.99999999;
 namespace tmc_eigen_utils {
 
 
-/// Convert RPY expression to QuatERion
-/// @param[in] 3D vector representing RPY RPY [RAD]
-/// @retval Four yuan numbers representing rotation
+/// Convert RPY representation to Quaternion
+/// @param[in] rpy 3D vector representing RPY [rad]
+/// @retval Quaternion representing rotation
 Eigen::Quaterniond RPYToQuaternion(const Eigen::Vector3d& rpy) {
   double cos_r2 = cos(rpy(0) * 0.5);
   double sin_r2 = sin(rpy(0) * 0.5);
@@ -52,9 +59,9 @@ Eigen::Quaterniond RPYToQuaternion(const Eigen::Vector3d& rpy) {
                             sin_y2 * cos_p2 * cos_r2 - cos_y2 * sin_p2 * sin_r2);  // z
 }
 
-/// Convert RPY expression to QuatERion
-/// @param[in] 3D vector representing RPY RPY [RAD]
-/// @retval Four yuan numbers representing rotation
+/// Convert RPY representation to Quaternion
+/// @param[in] rpy 3D vector representing RPY [rad]
+/// @retval Quaternion representing rotation
 Eigen::Quaternionf RPYToQuaternion(const Eigen::Vector3f& rpy) {
   float cos_r2 = cos(rpy(0) * 0.5);
   float sin_r2 = sin(rpy(0) * 0.5);
@@ -69,7 +76,7 @@ Eigen::Quaternionf RPYToQuaternion(const Eigen::Vector3f& rpy) {
                             sin_y2 * cos_p2 * cos_r2 - cos_y2 * sin_p2 * sin_r2);  // z
 }
 
-/// Convert Quaternion expression into RPY expression
+/// Convert Quaternion representation to RPY representation
 Eigen::Vector3d QuaternionToRPY(const Eigen::Quaterniond& quaternion) {
   double roll(0.0);
   double pitch(0.0);
@@ -77,20 +84,20 @@ Eigen::Vector3d QuaternionToRPY(const Eigen::Quaterniond& quaternion) {
   // Copy and normalize
   Eigen::Quaterniond q(quaternion);
   q.normalize();
-  // Calculate sin_p = 2 (WY-XZ)
+  // Calculate sin_p = 2(wy-xz)
   double sin_p = 2.0 * (q.w() * q.y() - q.x() * q.z());
 
-  // Check of Zimbal lock
+  // Check for gimbal lock
   if ((sin_p > kThresholdSingularRPY) || (sin_p < -kThresholdSingularRPY)) {
-    // In the case of a zimbal lock state
+    // In case of gimbal lock
 
-    // Roll is fixed to 0
+    // Fix roll to 0
     roll = 0.0;
 
-    // Express the posture with yo
+    // Represent orientation with yaw
     yaw = atan2(q.w() * q.z() - q.x() * q.y(), 0.5 - q.x() * q.x() - q.z() * q.z());
 
-    // Pitch angle calculation
+    // Calculate pitch angle
     if (sin_p < -1.0) {
       pitch = -M_PI * 0.5;
     } else if (sin_p > 1.0) {
@@ -99,7 +106,7 @@ Eigen::Vector3d QuaternionToRPY(const Eigen::Quaterniond& quaternion) {
       pitch = 0.5 * M_PI * sin_p;
     }
   } else {
-    // If it is not a Zimbal lock state
+    // If not in gimbal lock state
     roll = atan2(q.w() * q.x() + q.y() * q.z(), 0.5 - q.x() * q.x() - q.y() * q.y());
     pitch = asin(sin_p);
     yaw = atan2(q.x() * q.y() + q.w() * q.z(), 0.5 - q.y() * q.y() - q.z() * q.z());
@@ -108,7 +115,7 @@ Eigen::Vector3d QuaternionToRPY(const Eigen::Quaterniond& quaternion) {
   return Eigen::Vector3d(roll, pitch, yaw);
 }
 
-/// Convert Quaternion expression into RPY expression
+/// Convert Quaternion representation to RPY representation
 Eigen::Vector3f QuaternionToRPY(const Eigen::Quaternionf& quaternion) {
   float roll(0.0);
   float pitch(0.0);
@@ -116,20 +123,20 @@ Eigen::Vector3f QuaternionToRPY(const Eigen::Quaternionf& quaternion) {
   // Copy and normalize
   Eigen::Quaternionf q(quaternion);
   q.normalize();
-  // Calculate sin_p = 2 (WY-XZ)
+  // Calculate sin_p = 2(wy-xz)
   float sin_p = 2.0 * (q.w() * q.y() - q.x() * q.z());
 
-  // Check of Zimbal lock
+  // Check for gimbal lock
   if ((sin_p > kThresholdSingularRPY) || (sin_p < -kThresholdSingularRPY)) {
-    // In the case of a zimbal lock state
+    // In case of gimbal lock
 
-    // Roll is fixed to 0
+    // Fix roll to 0
     roll = 0.0;
 
-    // Express the posture with yo
+    // Represent orientation with yaw
     yaw = atan2(q.w() * q.z() - q.x() * q.y(), 0.5 - q.x() * q.x() - q.z() * q.z());
 
-    // Pitch angle calculation
+    // Calculate pitch angle
     if (sin_p < -1.0) {
       pitch = -M_PI * 0.5;
     } else if (sin_p > 1.0) {
@@ -138,7 +145,7 @@ Eigen::Vector3f QuaternionToRPY(const Eigen::Quaternionf& quaternion) {
       pitch = 0.5 * M_PI * sin_p;
     }
   } else {
-    /*If it is not a gimbal lock state */
+    /* If not in gimbal lock state */
     roll = atan2(q.w() * q.x() + q.y() * q.z(), 0.5 - q.x() * q.x() - q.y() * q.y());
     pitch = asin(sin_p);
     yaw = atan2(q.x() * q.y() + q.w() * q.z(), 0.5 - q.y() * q.y() - q.z() * q.z());

@@ -25,7 +25,12 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
-/// @brief    Read the STL file
+/// @file     stl_loader.hpp
+/// @brief    Read STL file
+/// @version  0.6.0
+/// @author   Takao Yasuda
+/// @note     Applied for Partner-Robot Coding Rule(Ver:x.xx)
+
 #ifndef TMC_STL_LOADER_STL_LOADER_HPP_
 #define TMC_STL_LOADER_STL_LOADER_HPP_
 #include <stdint.h>
@@ -42,14 +47,14 @@ struct Mesh {
     normals.clear();
     indices.clear();
   }
-  /// vertex
+  /// Vertex
   std::vector<Eigen::Vector3f> vertices;
-  /// Lines
+  /// Normal
   std::vector<Eigen::Vector3f> normals;
-  /// Number of aspects
+  /// Number of faces
   std::vector<uint32_t> indices;
 };
-// Search for the target vector from 3D vector groups
+// Search for the target vector from a group of 3D vectors
 void GetVertexIndex(const std::vector<Eigen::Vector3f> vertices, const Eigen::Vector3f& vector3, uint32_t& vector_id);
 // STL file reading class
 class STLLoader {
@@ -57,19 +62,19 @@ class STLLoader {
   using Ptr = std::shared_ptr<STLLoader>;
   STLLoader() {}
   virtual ~STLLoader() {}
-  /// Read the STL file
+  /// Load STL file
   void Load(const std::string& file_name, Mesh& mesh);
 
  private:
   STLLoader(const STLLoader&);
   STLLoader& operator=(const STLLoader&);
-  /// Read FLOAT type 1 byte
+  /// Read 1 byte of float type
   void ReadFloat_(uint8_t* data, float& byte_out);
-  /// Read FLOAT type 1 byte
+  /// Read 1 byte of float type
   void ReadFloat_(FILE* file, float& byte_out);
-  /// Read the UNSIGNED-Integer type 1 byte
+  /// Read 1 byte of unsigned-integer type
   void ReadLongInt_(uint8_t* data, uint32_t& byte_out);
-  /// Read the UNSIGNED-Integer type 1 byte
+  /// Read 1 byte of unsigned-integer type
   void ReadLongInt_(FILE* file, uint32_t& byte_out);
   /// Read STL binary according to the format
   void ReadBinary_(FILE* file, tmc_stl_loader::Mesh& mesh);

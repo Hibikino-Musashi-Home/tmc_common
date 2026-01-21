@@ -25,7 +25,14 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
-/// @brief    Summarize useful functions for using Eigen
+/// @file     eigen_utils.hpp
+/// @brief    A collection of useful functions for using eigen
+/// @author   Koji Terada
+/// @version  1.0.0
+/// @date     2012.2.23
+/// @note     [1.0.0] 2012.2.23 Newly created
+///           For now, roll-pitch-yaw angles
+
 #ifndef TMC_EIGEN_UTIL_EIGEN_UTILS_HPP__
 #define TMC_EIGEN_UTIL_EIGEN_UTILS_HPP__
 

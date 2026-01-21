@@ -26,7 +26,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
 /// @file     stl_loader-test.cpp
-/// @brief    Test to read STL files
+/// @brief    Test for reading STL files
 /// @version  0.1.1
 /// @author   Takao Yasuda
 /// @note     Applied for Partner-Robot Coding Rule(Ver:x.xx)
@@ -35,52 +35,59 @@ DAMAGE.
 #include "stl_loader-test.hpp"
 
 namespace tmc_stl_loader {
-/// File mode (loading)
+/// File mode (read)
 const char* const kFineModeRead = "r";
 
-/// [Normal system] Kinect STL file reading test
-/// @note Accurate number can be confirmed by Meshlab etc.
+/// [Normal case] Test for reading Kinect STL files
+/// @note The exact number can be confirmed with tools like meshlab
 TEST_F(STLLoaderTest, GiveExistingFileOfKinect) {
   // Absolute path
   stl_loader_->Load("kinect.stl", mesh_);
-  // judgement
+  // Judgment
   EXPECT_EQ(mesh_.vertices.size(), 3815u);
   EXPECT_EQ(mesh_.normals.size(), 7590u);
   EXPECT_EQ(mesh_.indices.size(), 22770u);
 
   // package
   stl_loader_->Load("package://tmc_stl_loader/test/kinect.stl", mesh_);
-  // judgement
+  // Judgment
+  EXPECT_EQ(mesh_.vertices.size(), 3815u);
+  EXPECT_EQ(mesh_.normals.size(), 7590u);
+  EXPECT_EQ(mesh_.indices.size(), 22770u);
+
+  // Uppercase STL
+  stl_loader_->Load("package://tmc_stl_loader/test/kinect.STL", mesh_);
+  // Judgment
   EXPECT_EQ(mesh_.vertices.size(), 3815u);
   EXPECT_EQ(mesh_.normals.size(), 7590u);
   EXPECT_EQ(mesh_.indices.size(), 22770u);
 }
-/// [Unusual system] Read test of files that do not exist
+/// [Abnormal case] Test for reading non-existent files
 TEST_F(STLLoaderTest, GiveNonExistFile) {
-  // File reading (empty file)
+  // File read (empty file)
   stl_loader_->Load("", mesh_);
 
-  // Judgment (all are empty)
+  // Judgment (all will be empty)
   EXPECT_EQ(mesh_.vertices.size(), 0u);
   EXPECT_EQ(mesh_.normals.size(), 0u);
   EXPECT_EQ(mesh_.indices.size(), 0u);
 }
-/// [Unusual system] Read test of different forms
+/// [Abnormal case] Test for reading files with different formats
 TEST_F(STLLoaderTest, GiveDifferentFormFile) {
-  // File reading (polygon file)
+  // File read (polygon file)
   stl_loader_->Load("kinect.ply", mesh_);
 
-  // Judgment (all are empty)
+  // Judgment (all will be empty)
   EXPECT_EQ(mesh_.vertices.size(), 0u);
   EXPECT_EQ(mesh_.normals.size(), 0u);
   EXPECT_EQ(mesh_.indices.size(), 0u);
 }
-///// [Abnormal system] Read test of different files in binary
+///// [Abnormal case] Test for reading files with different binary
 TEST_F(STLLoaderTest, GiveDifferentContentsFile) {
-  // File reading (ASCII format file)
+  // File read (ASCII format file)
   stl_loader_->Load("cube-ascii.stl", mesh_);
 
-  // Judgment (all are empty)
+  // Judgment (all will be empty)
   EXPECT_EQ(mesh_.vertices.size(), 0u);
   EXPECT_EQ(mesh_.normals.size(), 0u);
   EXPECT_EQ(mesh_.indices.size(), 0u);

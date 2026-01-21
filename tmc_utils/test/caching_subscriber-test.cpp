@@ -79,7 +79,7 @@ TEST(CachingSubscriberTest, QoS) {
       sub_node, "test_topic", ReliableTransientLocalQoS());
   EXPECT_FALSE(cache_transient_local.IsSubscribed());
 
-  // Because it is TransientLocal, it should be sent without Publishing.
+  // Since it's TransientLocal, it should be sent even if not published
   const auto timeout = pub_node->now() + rclcpp::Duration::from_seconds(1.0);
   while (!cache_transient_local.IsSubscribed() && pub_node->now() < timeout) {
     rclcpp::spin_some(sub_node);

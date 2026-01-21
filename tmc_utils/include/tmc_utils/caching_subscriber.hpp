@@ -48,13 +48,26 @@ class CachingSubscriber {
       : CachingSubscriber(node, topic_name, 1) {}
   virtual ~CachingSubscriber() = default;
 
-  bool IsSubscribed() const { return msg_ != nullptr; }
-  MsgType GetValue() const { return *msg_; }
+  bool IsSubscribed() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return msg_ != nullptr;
+  }
+
+  MsgType GetValue() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return *msg_;
+  }
 
  private:
-  void Callback(const typename MsgType::SharedPtr msg) { msg_ = msg; }
+  void Callback(const typename MsgType::SharedPtr msg) {
+    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock);
+    if (lock.try_lock()) {
+      msg_ = msg;
+    }
+  }
   typename rclcpp::Subscription<MsgType>::SharedPtr sub_;
   typename MsgType::SharedPtr msg_;
+  mutable std::mutex mutex_;
 };
 
 }  // namespace tmc_utils

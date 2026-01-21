@@ -26,7 +26,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
 /// @file     stl_loader-test.hpp
-/// @brief    Test to read STL files
+/// @brief    Test for reading STL files
 /// @version  0.1.1
 /// @author   Takao Yasuda
 /// @note     Applied for Partner-Robot Coding Rule(Ver:x.xx)
@@ -46,9 +46,9 @@ class STLLoaderTest : public ::testing::Test {
   virtual void SetUp() {}
   virtual void TearDown() {}
 
-  /// STL file reading library
+  /// SLT file reading library
   std::shared_ptr<tmc_stl_loader::STLLoader> stl_loader_;
-  /// mesh
+  /// Mesh
   tmc_stl_loader::Mesh mesh_;
 
  private:
