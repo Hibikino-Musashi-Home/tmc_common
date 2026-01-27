@@ -120,9 +120,8 @@ JointTrajectoryPublisher::JointTrajectoryPublisher(rclcpp::Node* node,
   continuous_joints_ = tmc_utils::GetParameter<std::vector<std::string>>(
       node, controller_name + ".continuous_joints", {});
 
-  // If you just use Joint_trajectory_controller simply,
-  // you can get the joint name by obtaining a parameter from the controller.
-  // It's useless if you have a unique controller or REMAP, so put the implementation from the parameters.
+  // If you are simply using the joint_trajectory_controller, you can get the joint names from the controller's parameters
+  // If you are using a custom controller or remapping, it won't work, so implement fetching from parameters
   joint_names_ = tmc_utils::GetParameter<std::vector<std::string>>(node, controller_name + ".joints", {});
   if (!joint_names_.empty()) {
     RCLCPP_INFO_STREAM(node->get_logger(),
@@ -133,9 +132,11 @@ JointTrajectoryPublisher::JointTrajectoryPublisher(rclcpp::Node* node,
   const auto wait_for_controller_milliseconds = tmc_utils::GetParameter<int>(
       node, "wait_for_controller_milliseconds", 2000);
 
-  const auto parameter = std::make_shared<rclcpp::SyncParametersClient>(node, controller_name);
+  // Since spin_node_until_future_complete is called during get_parameters, it's safer not to use nodes that might be spun separately
+  auto client_node = rclcpp::Node::make_shared(node->get_name());
+  const auto parameter = std::make_shared<rclcpp::SyncParametersClient>(client_node, controller_name);
   if (!parameter->wait_for_service(std::chrono::milliseconds(wait_for_controller_milliseconds))) {
-    throw std::domain_error("Communication with the trajectory controller server failed.");
+    throw std::domain_error(std::string("Communication with ") + controller_name + " failed.");
   }
   const auto parameters_get_results = parameter->get_parameters({"joints"}).at(0);
   joint_names_ = parameters_get_results.as_string_array();

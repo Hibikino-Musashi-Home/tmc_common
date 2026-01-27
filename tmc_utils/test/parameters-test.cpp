@@ -91,6 +91,15 @@ TEST(GetParameterTest, InvalidType) {
   EXPECT_THROW(GetParameter<double>(node, "test_param", 0.0), rclcpp::exceptions::InvalidParameterTypeException);
 }
 
+TEST(GetParameterTest, LifecycleNode) {
+  rclcpp::NodeOptions options;
+  options.parameter_overrides() = {rclcpp::Parameter("test_param", 42)};
+  auto node = rclcpp_lifecycle::LifecycleNode::make_shared("test", options);
+
+  EXPECT_EQ(GetParameter<int64_t>(node, "test_param", 108), 42);
+  EXPECT_EQ(GetParameter<int64_t>(node.get(), "test_param", 108), 42);
+}
+
 TEST(DynamicParameterTest, DeclaredParameter) {
   rclcpp::NodeOptions options;
   options.parameter_overrides() = {rclcpp::Parameter("test_param", 42)};
@@ -150,10 +159,34 @@ TEST(DynamicParameterTest, InvalidType) {
                rclcpp::exceptions::InvalidParameterTypeException);
 }
 
-TEST(DynamicParameterTest, LawPointer) {
+TEST(DynamicParameterTest, NodeRawPointer) {
   rclcpp::NodeOptions options;
   options.parameter_overrides() = {rclcpp::Parameter("test_param", 42)};
   auto node = rclcpp::Node::make_shared("test", options);
+
+  auto dynamic_param = std::make_shared<DynamicParameter<int64_t>>(node.get(), "test_param", 0);
+  EXPECT_EQ(dynamic_param->value(), 42);
+
+  node->set_parameter(rclcpp::Parameter("test_param", 108));
+  EXPECT_EQ(dynamic_param->value(), 108);
+}
+
+TEST(DynamicParameterTest, LifeCycleNodeSharedPtr) {
+  rclcpp::NodeOptions options;
+  options.parameter_overrides() = {rclcpp::Parameter("test_param", 42)};
+  auto node = rclcpp_lifecycle::LifecycleNode::make_shared("test", options);
+
+  auto dynamic_param = std::make_shared<DynamicParameter<int64_t>>(node, "test_param", 0);
+  EXPECT_EQ(dynamic_param->value(), 42);
+
+  node->set_parameter(rclcpp::Parameter("test_param", 108));
+  EXPECT_EQ(dynamic_param->value(), 108);
+}
+
+TEST(DynamicParameterTest, LifeCycleNodeRawPointer) {
+  rclcpp::NodeOptions options;
+  options.parameter_overrides() = {rclcpp::Parameter("test_param", 42)};
+  auto node = rclcpp_lifecycle::LifecycleNode::make_shared("test", options);
 
   auto dynamic_param = std::make_shared<DynamicParameter<int64_t>>(node.get(), "test_param", 0);
   EXPECT_EQ(dynamic_param->value(), 42);

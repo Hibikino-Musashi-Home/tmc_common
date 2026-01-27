@@ -25,7 +25,11 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
-/// @brief    Read the STL file
+/// @file     stl_loader.cpp
+/// @brief    Read STL file
+/// @version  0.6.0
+/// @author   Takao Yasuda
+/// @note     Applied for Partner-Robot Coding Rule(Ver:x.xx)
 #include "tmc_stl_loader/stl_loader.hpp"
 #include <cassert>
 #include <stdint.h>
@@ -35,47 +39,47 @@ DAMAGE.
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
 namespace {
-/// Number of STL files header bytes
+/// Number of bytes in STL file header
 uint32_t const kHeaderByte = 80;
-/// One triangle number of bytes in the STL file
+/// Number of bytes for one triangle in STL file
 uint32_t const kTriangleByte = 50;
-/// Number of part -time jobs for STL files
+/// Number of bytes for float in STL file
 uint32_t const kFloatSize = 4;
-/// Dimension (3D)
+/// Number of dimensions (3D)
 uint32_t const kTri = 3;
-/// Unbreaked
+/// Not detected
 uint32_t const kNonExist = -1;
-/// File mode (loading)
+/// File mode (read)
 const char* const kFineModeRead = "r";
 }  // end namespace
 namespace tmc_stl_loader {
-/// @brief Search for the target vector from 3D vector groups
-/// @param[in] VerticeS 3D vector group
-/// @param[in] Vector3 3D vector
-/// @param[out] Vector_id vector ID (-1 == nonExist)
+/// @brief Search for the target vector from a group of 3D vectors
+/// @param[in] vertices Group of 3D vectors
+/// @param[in] vector3 3D vector
+/// @param[out] vector_id Vector ID (-1 == NonExist: non-existent address)
 void GetVertexIndex(const std::vector<Eigen::Vector3f> vertices, const Eigen::Vector3f& vector3, uint32_t& vector_id) {
   vector_id = kNonExist;
-  // 3 Dimensional data acquire the corresponding vector ID
+  // Obtain the corresponding vector ID from 3D data
   for (uint32_t i = 0; i < vertices.size(); ++i) {
     if (vertices[i] == vector3) {
       vector_id = i;
     }
   }
 }
-/// @param[in] File_name address (file name)
-/// @param[out] mesh_out mesh data
-/// @note The binary format is (file size-84)/50, and there are not too many, see below.
+/// @param[in] file_name Address (file name)
+/// @param[out] mesh_out Mesh data
+/// @note Binary format has no remainder when (file size-84)/50, see below
 /// @note http://ja.wikipedia.org/wiki/Standard_Triangulated_Language
 void STLLoader::Load(const std::string& file_name, Mesh& mesh_out) {
   mesh_out = Mesh();
 
-  // If the file is blank or the format is different, return the sky without reading.
+  // If the file is blank or in a different format, do not process and return empty
   std::string extension;
   extension.clear();
   for (uint32_t i = file_name.find_last_of(".") + 1; i < file_name.size(); ++i) {
     extension.push_back(file_name.at(i));
   }
-  if ((file_name == "") || (extension != "stl")) {
+  if ((file_name == "") || ((extension != "stl") && (extension != "STL"))) {
     return;
   }
 
@@ -103,31 +107,31 @@ void STLLoader::Load(const std::string& file_name, Mesh& mesh_out) {
     file_name_impl = package_path + file_name_impl;
   }
 
-  // If the file size is 0, return the sky without reading processing.
+  // If the file size is 0, do not process and return empty
   std::ifstream ifs(file_name_impl.c_str(), std::ios::binary);
   ifs.peek();
   if (ifs.rdbuf()->in_avail() == 0) {
     return;
   }
-  // If it is not a binary format, return the sky without reading processing
+  // If not in binary format, do not process and return empty
   if ((static_cast<int>(ifs.seekg(0, std::ios::end).tellg()) - 84) % 50 != 0) {
     return;
   }
-  // Open the STL file for reading
+  // Open the STL file in read-only mode
   FILE* file = fopen(file_name_impl.c_str(), kFineModeRead);
   if (file == NULL) {
-    // If there is no file, return the sky without reading processing.
+    // If the file does not exist, do not process and return empty
     fclose(file);
     return;
   }
-  // Read the STL file and get a mesh data
+  // Read the STL file and obtain mesh data
   ReadBinary_(file, mesh_out);
-  // Termination processing
+  // Termination process
   fclose(file);
   file = NULL;
 }
-/// @param[in] Data Read the Byte column's leading pointer
-/// @param[out] byte_out 4 bytes Read data (float type)
+/// @param[in] data Pointer to the start of the byte sequence to read
+/// @param[out] byte_out Data read as 4 bytes (float type)
 void STLLoader::ReadFloat_(uint8_t* data, float& byte_out) {
   union {
     float yfloat;
@@ -138,16 +142,16 @@ void STLLoader::ReadFloat_(uint8_t* data, float& byte_out) {
   }
   byte_out = y.yfloat;
 }
-/// @param[in] File file
-/// @param[out] byte_out 4 bytes Read data (float type)
+/// @param[in] file File
+/// @param[out] byte_out Data read as 4 bytes (float type)
 void STLLoader::ReadFloat_(FILE* file, float& byte_out) {
   byte_out = 0.0;
   if (fread(&byte_out, sizeof(byte_out), 1, file) == 0) {
     assert(!"Error in STLLoader::ReadFloat");
   }
 }
-/// @param[in] Data Read the Byte column's leading pointer
-/// @param[out] byte_out 4 bytes Read data (UINT32 type)
+/// @param[in] data Pointer to the start of the byte sequence to read
+/// @param[out] byte_out Data read as 4 bytes (uint32 type)
 void STLLoader::ReadLongInt_(uint8_t* data, uint32_t& byte_out) {
   union {
     uint32_t yint;
@@ -158,8 +162,8 @@ void STLLoader::ReadLongInt_(uint8_t* data, uint32_t& byte_out) {
   }
   byte_out = y.yint;
 }
-/// @param[in] File file
-/// @param[out] byte_out 4 bytes Read data (UINT32 type)
+/// @param[in] file File
+/// @param[out] byte_out Data read as 4 bytes (uint32 type)
 void STLLoader::ReadLongInt_(FILE* file, uint32_t& byte_out) {
   union {
     uint32_t yint;
@@ -171,11 +175,11 @@ void STLLoader::ReadLongInt_(FILE* file, uint32_t& byte_out) {
   y.ychar[3] = fgetc(file);
   byte_out = y.yint;
 }
-/// @param[in] File file
-/// @param[out] MESH mesh data
+/// @param[in] file File
+/// @param[out] mesh Mesh data
 void STLLoader::ReadBinary_(FILE* file, tmc_stl_loader::Mesh& mesh) {
   mesh = Mesh();
-  // Read the header byte
+  // Skip header bytes
   for (uint32_t i = 0; i < kHeaderByte; ++i) {
     if (fgetc(file) == EOF) {
       assert(!"Not Found STL Data in File.");
@@ -183,7 +187,7 @@ void STLLoader::ReadBinary_(FILE* file, tmc_stl_loader::Mesh& mesh) {
   }
   uint32_t face_num = 0.0;
   ReadLongInt_(file, face_num);
-  // Read each triangle, see the following URL for the format.
+  // Read each triangle, refer to the URL below for the format.
   // http://ja.wikipedia.org/wiki/Standard_Triangulated_Language
   for (uint32_t iface = 0; iface < face_num; ++iface) {
     float nx = 0.0;
@@ -204,14 +208,14 @@ void STLLoader::ReadBinary_(FILE* file, tmc_stl_loader::Mesh& mesh) {
       Eigen::Vector3f vertex(vx, vy, vz);
       uint32_t index = kNonExist;
       GetVertexIndex(mesh.vertices, vertex, index);
-      // If it does not exist, add it
+      // Add if not existing
       if (index == kNonExist) {
         mesh.vertices.push_back(vertex);
         index = mesh.vertices.size() - 1;
       }
       mesh.indices.push_back(index);
     }
-    // Turn 2 byte for the end
+    // Return the last 2 bytes
     fgetc(file);
     fgetc(file);
   }

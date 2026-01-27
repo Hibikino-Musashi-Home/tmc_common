@@ -1,15 +1,14 @@
 <package format="3">
   <name>tmc_manipulation_util</name>
-  <version>2.0.0</version>
-  <description>Utility functions for manipulation</description>
+  <version>2.1.0</version>
+  <description>A package that collects convenient functions and classes specific to manipulation.</description>
   <maintainer email="xr-hsr-support@mail.toyota.co.jp">HSR Support</maintainer>
 
   <license>BSD 3-clause Clear License</license>
 
   <url type="website">tmc_manipulation_util</url>
 
-  <author>Atushi TsuTsumi</author>
-  <author>Keisuke Takeshita</author>
+  <author>Takashi Ogura</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

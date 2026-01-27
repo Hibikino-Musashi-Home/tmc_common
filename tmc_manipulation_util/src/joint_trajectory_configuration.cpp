@@ -25,7 +25,8 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
-/// @brief    General -purpose function for handling joint orbits
+/// @file     joint_trajectory_configuration.cpp
+/// @brief    General function for handling joint trajectories
 #include <tmc_manipulation_util/joint_trajectory_configuration.hpp>
 
 #include <algorithm>
@@ -33,8 +34,8 @@ DAMAGE.
 #include <vector>
 
 namespace {
-/// Get the joint angle from Joint_states
-/// If you can't find it, return False
+/// Retrieve joint angles from joint_states
+/// Return false if not found
 bool GetJointPosition(const sensor_msgs::msg::JointState& joint_states,
                       const std::string& joint,
                       double& angle_out) {
@@ -50,6 +51,15 @@ bool GetJointPosition(const sensor_msgs::msg::JointState& joint_states,
 
 namespace tmc_manipulation_util {
 
+/// From joint_trajectory with joint_names
+/// Extract only the specified joints to create joint_trajectory
+/// Retrieve joints not present in joint_trajectory from joint_state.
+/// If not found there either, consider it a failure
+/// @param[in] joint_trajectory Input trajectory
+/// @param[in] joint_names Joint names
+/// @param[in] joint_state Joint state
+/// @param[out] partial_joint_trajectory_out Output trajectory
+/// @return Success or failure
 bool ExtractTrajectory(
     const trajectory_msgs::msg::JointTrajectory& joint_trajectory,
     const std::vector<std::string>& joint_names,
@@ -57,7 +67,7 @@ bool ExtractTrajectory(
     trajectory_msgs::msg::JointTrajectory& partial_joint_trajectory_out) {
   uint32_t num_points = joint_trajectory.points.size();
   uint32_t num_joints = joint_names.size();
-  // Create a corresponding number for Joint_trajectory -1 is not supported
+  // Create corresponding numbers for joint_trajectory, -1 indicates no correspondence
   std::vector<int32_t> index_map(num_joints);
   std::vector<double> position_map(num_joints);
   for (unsigned int joint_index = 0; joint_index < num_joints; ++joint_index) {
@@ -117,6 +127,14 @@ bool ExtractTrajectory(
   return true;
 }
 
+/// Merge original_trajectory and additional_trajectory, which have the same number of points for different joints, into a single trajectory
+/// Merge original_trajectory and additional_trajectory into a single trajectory
+/// Failure occurs if the size of points differs
+/// time_from_start is aligned with the original
+/// @param[in] original_trajectory Original input trajectory
+/// @param[in] additional_trajectory Additional input trajectory
+/// @param[out] merged_trajectory_out Output trajectory
+/// @return Success or failure
 bool MergeJointTrajectory(
     const trajectory_msgs::msg::JointTrajectory& original_trajectory,
     const trajectory_msgs::msg::JointTrajectory& additional_trajectory,
@@ -124,7 +142,7 @@ bool MergeJointTrajectory(
   if (original_trajectory.points.size() != additional_trajectory.points.size()) {
     return false;
   }
-  // Prepare a check vector to keep the joint order in Merged_trajectory_out
+  // Prepare a check vector to maintain the order of joints in merged_trajectory_out
   auto joint_names = original_trajectory.joint_names;
   joint_names.insert(joint_names.begin(),
                      additional_trajectory.joint_names.begin(),

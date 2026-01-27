@@ -14,14 +14,14 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED src/msg_io.cpp)
+add_library(${PROJECT_NAME} SHARED src/msg_io.cpp src/robot_description.cpp)
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-
-ament_target_dependencies(${PROJECT_NAME} rclcpp)
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_lifecycle)
 
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION lib
@@ -61,11 +61,14 @@ if(BUILD_TESTING)
     PRIVATE
       "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
       "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-  ament_target_dependencies(test_parameters rclcpp std_msgs)
+  ament_target_dependencies(test_parameters rclcpp rclcpp_lifecycle std_msgs)
+
+  ament_add_gtest(test_robot_description test/robot_description-test.cpp)
+  target_link_libraries(test_robot_description ${PROJECT_NAME})
 endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
-ament_export_dependencies(rclcpp)
+ament_export_dependencies(rclcpp rclcpp_lifecycle)
 
 ament_package()
